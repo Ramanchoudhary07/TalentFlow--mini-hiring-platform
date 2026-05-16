@@ -2,6 +2,8 @@ node_modules
 # Keep environment variables out of version control
 .env
 
+/lib/generated/prisma
+
 # Logs
 logs
 *.log
@@ -10,9 +12,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
-
-/lib/generated/prisma
 
 dist
 dist-ssr
