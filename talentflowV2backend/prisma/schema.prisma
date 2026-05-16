@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Job {
+  id           String        @id @default(uuid())
+  title        String
+  slug         String        @unique
+  status       String        @default("active") // active, archived
+  tags         String[]
+  order        Int           @default(0)
+  description  String
+  requirements String[]
+  salary       String?
+  location     String?
+  jobType      String?       // Full-time, Remote, Part-time, Contract
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  applications Application[]
+  assessments  Assessment[]
+}
+
+model Candidate {
+  id          String        @id @default(uuid())
+  name        String
+  email       String        @unique
+  phone       String?
+  resume      String?
+  notes       String[]      @default([])
+  skills      String[]      @default([])
+  experience  String?
+  education   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  applications Application[]
+}
+
+model Application {
+  id          String    @id @default(uuid())
+  jobId       String
+  candidateId String
+  stage       String    @default("applied") // applied, screening, interview, offer, hired, rejected
+  coverLetter String?
+  appliedAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  job       Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, candidateId])
+}
+
+model Assessment {
+  id          String              @id @default(uuid())
+  jobId       String
+  title       String
+  description String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  job         Job                 @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  sections    AssessmentSection[]
+  submissions AssessmentSubmission[]
+}
+
+model AssessmentSection {
+  id           String     @id @default(uuid())
+  assessmentId String
+  title        String
+  order        Int        @default(0)
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  questions  Question[]
+}
+
+model Question {
+  id          String   @id @default(uuid())
+  sectionId   String
+  type        String   // single-choice, multi-choice, short-text, long-text, numeric, file-upload
+  question    String
+  options     String[] @default([])
+  required    Boolean  @default(false)
+  validation  Json?    // Stores minLength, maxLength, min, max, etc.
+  conditional Json?    // Stores questionId and value for conditional logic
+  order       Int      @default(0)
+
+  section AssessmentSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+}
+
+model AssessmentSubmission {
+  id           String   @id @default(uuid())
+  assessmentId String
+  candidateId  String
+  responses    Json     // Store the key-value map of questionId -> answer
+  submittedAt  DateTime @default(now())
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  // Optionally link to the candidate or application. We link to Candidate here to be consistent.
+  // We can't strictly relate to Application without both fields unless we just store Candidate ID.
+}
