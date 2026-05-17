@@ -12,7 +12,7 @@ export const getCandidates = async (req: Request, res: Response): Promise<void> 
     });
 
     // Map to frontend expected structure
-    const formattedCandidates = applications.map((app) => ({
+    const formattedCandidates = applications.map((app: any) => ({
       id: app.id, // Using application ID as the primary identifier for the card
       name: app.candidate.name,
       email: app.candidate.email,
